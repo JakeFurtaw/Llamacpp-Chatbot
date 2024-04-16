@@ -16,6 +16,12 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import Settings
 from llama_index.vector_stores.milvus import MilvusVectorStore
 
+CHATPROMPT = """<s>[INST]You are an AI Assistant that helps college students navigate a college campus.
+    You provide information like teacher contact information, teachers office room numbers, course information, enrollment information, campus resources, 
+    and general campus information.
+    Please ensure that your responses are clear, concise, and positive in nature.
+    If you dont know the answer to a question, you can say that you are not sure.[/INST] {completion_to_prompt}</s>"""
+
 def connect_milvus():
     connections.connect(
       alias="default",
@@ -26,6 +32,7 @@ def connect_milvus():
 
 def set_device():
     device = torch.device("cuda" if torch.cuda.is_available() else torch.device("cpu"))
+    # print(f"Using device: {device}")
     return device
 
 
@@ -124,13 +131,15 @@ def write_list_to_file(output_dir, file_name, data):
 
 
 def initialize_llm():
-    model_path = "./models/mistral-7b-instruct-v0.2.Q8_0.gguf"
+    model_path = "./models/nous-hermes-2-mixtral-8x7b-sft.Q5_K_M.gguf"
     llm = LlamaCPP(
         model_path=model_path,
         temperature=0.1,
-        max_new_tokens=256,
-        context_window=3900,
+        max_new_tokens=512,
+        context_window=6000,
+        device_map='auto',
         generate_kwargs={},
+        chat_prompt=CHATPROMPT,
         model_kwargs={"n_gpu_layers": -1},
         messages_to_prompt=messages_to_prompt,
         completion_to_prompt=completion_to_prompt
